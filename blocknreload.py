@@ -47,6 +47,8 @@ def process_log_line(line, ip_counter, post_request_counter):
             post_request_counter[ip] = post_request_counter.get(ip, 0) + 1
 
         if ip_counter[ip] > MAX_REQUESTS_PER_MINUTE or post_request_counter[ip] > MAX_POST_REQUESTS:
+            print(ip)
+            print(ip_counter)
             block_ip(ip)
             ip_counter[ip] = 0
             post_request_counter[ip] = 0
