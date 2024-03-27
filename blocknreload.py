@@ -37,7 +37,7 @@ def show_blocked_ips():
 
 # Обработка строки лога
 def process_log_line(line, ip_counter, post_request_counter):
-    SERVER_IP = '192.168.135.128'  # IP-адрес вашего сервера
+    SERVER_IP = '192.168.8.101'  # Обновленный IP-адрес сервера
     ip_address = re.findall(r'[0-9]+(?:\.[0-9]+){3}', line)
     if ip_address:
         ip = ip_address[0]
@@ -55,6 +55,7 @@ def process_log_line(line, ip_counter, post_request_counter):
             block_ip(ip)
             ip_counter[ip] = 0
             post_request_counter[ip] = 0
+
 
 
 # Мониторинг лог-файла
