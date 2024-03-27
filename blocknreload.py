@@ -1,60 +1,39 @@
-import os
 import subprocess
 import re
 import time
-import sqlite3
 import threading
 import sys
+import os
 
 # Настройки для обнаружения DDoS-атаки
 MAX_REQUESTS_PER_MINUTE = 100
 MAX_POST_REQUESTS = 50
 LOG_FILE_PATH = "/var/log/nginx/access.log"
-NGINX_BLOCKED_IPS_FILE = "/etc/nginx/blocked_ips.conf"
+BLOCKED_IPS_FILE = "blocked_ips.txt"
 
 # Глобальная переменная для управления мониторингом
 running = False
 
-# Инициализация базы данных
-def init_db():
-    conn = sqlite3.connect('blocked_ips.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS blocked_ips (
-            ip TEXT PRIMARY KEY,
-            block_time TIMESTAMP
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-# Обновление файла Nginx с заблокированными IP
-def update_nginx_blocked_ips():
-    conn = sqlite3.connect('blocked_ips.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT ip FROM blocked_ips')
-    ips = cursor.fetchall()
-    with open(NGINX_BLOCKED_IPS_FILE, "w") as file:
-        for ip in ips:
-            file.write(f"deny {ip[0]};\n")
-    conn.close()
-    os.system("nginx -s reload")
-
-# Добавление заблокированного IP в базу данных
-def log_blocked_ip(ip_address):
-    conn = sqlite3.connect('blocked_ips.db')
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO blocked_ips (ip, block_time) VALUES (?, ?)', 
-                   (ip_address, time.strftime('%Y-%m-%d %H:%M:%S')))
-    conn.commit()
-    conn.close()
-    update_nginx_blocked_ips()
-
 # Блокировка IP-адреса
 def block_ip(ip_address):
+    with open(BLOCKED_IPS_FILE, "a") as file:
+        file.write(f"{ip_address}\n")
     os.system(f"iptables -A INPUT -s {ip_address} -j DROP")
-    log_blocked_ip(ip_address)
     print(f"Blocked IP: {ip_address}")
+
+# Просмотр заблокированных IP-адресов
+def show_blocked_ips():
+    if not os.path.exists(BLOCKED_IPS_FILE):
+        print("Файл заблокированных IP не найден.")
+        return
+    with open(BLOCKED_IPS_FILE, "r") as file:
+        blocked_ips = file.readlines()
+    if blocked_ips:
+        print("Заблокированные IP-адреса:")
+        for ip in blocked_ips:
+            print(ip.strip())
+    else:
+        print("Нет заблокированных IP-адресов.")
 
 # Обработка строки лога
 def process_log_line(line, ip_counter, post_request_counter):
@@ -101,9 +80,8 @@ def stop_monitoring():
 
 # Главный цикл управления
 if __name__ == "__main__":
-    init_db()
     while True:
-        command = input("Введите 'start' для запуска, 'stop' для остановки или 'exit' для выхода: ")
+        command = input("Введите 'start' для запуска, 'stop' для остановки, 'show' для просмотра заблокированных IP, или 'exit' для выхода: ")
         if command == "start":
             if not running:
                 start_monitoring()
@@ -114,6 +92,8 @@ if __name__ == "__main__":
                 stop_monitoring()
             else:
                 print("Мониторинг не запущен.")
+        elif command == "show":
+            show_blocked_ips()
         elif command == "exit":
             if running:
                 stop_monitoring()
