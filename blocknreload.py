@@ -37,21 +37,25 @@ def show_blocked_ips():
 
 # Обработка строки лога
 def process_log_line(line, ip_counter, post_request_counter):
+    SERVER_IP = '192.168.135.128'  # IP-адрес вашего сервера
     ip_address = re.findall(r'[0-9]+(?:\.[0-9]+){3}', line)
     if ip_address:
         ip = ip_address[0]
-        request_type = "POST" if "POST" in line else "GET"
+        
+        # Пропустить обработку если IP совпадает с IP-адресом сервера
+        if ip == SERVER_IP:
+            return
 
+        request_type = "POST" if "POST" in line else "GET"
         ip_counter[ip] = ip_counter.get(ip, 0) + 1
         if request_type == "POST":
             post_request_counter[ip] = post_request_counter.get(ip, 0) + 1
 
         if ip_counter[ip] > MAX_REQUESTS_PER_MINUTE or post_request_counter[ip] > MAX_POST_REQUESTS:
-            print(ip)
-            print(ip_counter)
             block_ip(ip)
             ip_counter[ip] = 0
             post_request_counter[ip] = 0
+
 
 # Мониторинг лог-файла
 def monitor_log_file():
