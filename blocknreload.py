@@ -16,10 +16,13 @@ running = False
 
 # Блокировка IP-адреса
 def block_ip(ip_address):
+    log_prefix = f"Dropped: {ip_address}"
+    os.system(f"iptables -A INPUT -s {ip_address} -j LOG --log-prefix '{log_prefix}' --log-level 4")
+    os.system(f"iptables -A INPUT -s {ip_address} -j DROP")
     with open(BLOCKED_IPS_FILE, "a") as file:
         file.write(f"{ip_address}\n")
-    os.system(f"iptables -A INPUT -s {ip_address} -j DROP")
     print(f"Blocked IP: {ip_address}")
+
 
 # Просмотр заблокированных IP-адресов
 def show_blocked_ips():
