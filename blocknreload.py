@@ -9,19 +9,17 @@ import os
 MAX_REQUESTS_PER_MINUTE = 100
 MAX_POST_REQUESTS = 50
 LOG_FILE_PATH = "/var/log/nginx/access.log"
-BLOCKED_IPS_FILE = "blocked_ips.txt"
+NGINX_BLOCKED_IPS_FILE = "/etc/nginx/blocked_ips.conf"
 
 # Глобальная переменная для управления мониторингом
 running = False
 
 # Блокировка IP-адреса
 def block_ip(ip_address):
-    log_prefix = f"Dropped: {ip_address}"
-    os.system(f"iptables -A INPUT -s {ip_address} -j LOG --log-prefix '{log_prefix}' --log-level 4")
-    os.system(f"iptables -A INPUT -s {ip_address} -j REJECT --reject-with icmp-net-prohibited")
-    with open(BLOCKED_IPS_FILE, "a") as file:
-        file.write(f"{ip_address}\n")
-    print(f"Blocked IP: {ip_address}")
+    with open(NGINX_BLOCKED_IPS_FILE, "a") as file:
+        file.write(f"deny {ip_address};\n")
+    os.system("nginx -s reload")
+    print(f"Blocked IP in Nginx: {ip_address}")
 
 
 # Просмотр заблокированных IP-адресов
