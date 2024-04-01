@@ -18,7 +18,7 @@ running = False
 def block_ip(ip_address):
     log_prefix = f"Dropped: {ip_address}"
     os.system(f"iptables -A INPUT -s {ip_address} -j LOG --log-prefix '{log_prefix}' --log-level 4")
-    os.system(f"iptables -A INPUT -s {ip_address} -j DROP")
+    os.system(f"iptables -A INPUT -s {ip_address} -j REJECT --reject-with icmp-net-prohibited")
     with open(BLOCKED_IPS_FILE, "a") as file:
         file.write(f"{ip_address}\n")
     print(f"Blocked IP: {ip_address}")
