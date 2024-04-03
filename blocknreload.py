@@ -24,10 +24,10 @@ def block_ip(ip_address):
 
 # Просмотр заблокированных IP-адресов
 def show_blocked_ips():
-    if not os.path.exists(BLOCKED_IPS_FILE):
+    if not os.path.exists(NGINX_BLOCKED_IPS_FILE):
         print("Файл заблокированных IP не найден.")
         return
-    with open(BLOCKED_IPS_FILE, "r") as file:
+    with open(NGINX_BLOCKED_IPS_FILE, "r") as file:
         blocked_ips = file.readlines()
     if blocked_ips:
         print("Заблокированные IP-адреса:")
