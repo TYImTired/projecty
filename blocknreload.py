@@ -6,13 +6,18 @@ import sys
 import os
 
 # Настройки для обнаружения DDoS-атаки
-MAX_REQUESTS_PER_MINUTE = 100
-MAX_POST_REQUESTS = 50
+LIMIT = 100  # Изначальное значение лимита запросов
 LOG_FILE_PATH = "/var/log/nginx/access.log"
 NGINX_BLOCKED_IPS_FILE = "/etc/nginx/blocked_ips.conf"
 
 # Глобальная переменная для управления мониторингом
 running = False
+
+# Установка лимита оператором
+def set_limit(new_limit):
+    global LIMIT
+    LIMIT = new_limit
+    print(f"Новый лимит установлен: {LIMIT} запросов")
 
 # Блокировка IP-адреса
 def block_ip(ip_address):
@@ -20,7 +25,6 @@ def block_ip(ip_address):
         file.write(f"deny {ip_address};\n")
     os.system("nginx -s reload")
     print(f"Blocked IP in Nginx: {ip_address}")
-
 
 # Просмотр заблокированных IP-адресов
 def show_blocked_ips():
@@ -35,30 +39,29 @@ def show_blocked_ips():
             print(ip.strip())
     else:
         print("Нет заблокированных IP-адресов.")
-
 # Обработка строки лога
-def process_log_line(line, ip_counter, post_request_counter):
+
+def process_log_line(line, ip_details):
     ip_address = re.findall(r'[0-9]+(?:\.[0-9]+){3}', line)
     if ip_address:
         ip = ip_address[0]
+        if ip not in ip_details:
+            ip_details[ip] = {"count": 0, "start_time": time.time(), "end_time": time.time()}
 
-        # Инициализация счетчика для нового IP-адреса, если он еще не встречался
-        ip_counter[ip] = ip_counter.get(ip, 0)
-        post_request_counter[ip] = post_request_counter.get(ip, 0)
+        ip_details[ip]["count"] += 1
+        ip_details[ip]["end_time"] = time.time()
 
-        # Здесь уже можно безопасно использовать ip_counter[ip] и post_request_counter[ip]
-        request_type = "POST" if "POST" in line else "GET"
-        ip_counter[ip] += 1
-        if request_type == "POST":
-            post_request_counter[ip] += 1
+        dtime = max(ip_details[ip]["end_time"] - ip_details[ip]["start_time"], 1)
+        curkoef = LIMIT / dtime
+        limkoef = LIMIT / 60
+        r = limkoef / curkoef
 
-        if ip_counter[ip] > MAX_REQUESTS_PER_MINUTE or post_request_counter[ip] > MAX_POST_REQUESTS:
+        if r > 1:
             block_ip(ip)
-            ip_counter[ip] = 0
-            post_request_counter[ip] = 0
-
-
-
+            ip_details.pop(ip)  # Сбросить подсчет для этого IP
+        elif 0.85 <= r <= 1:
+            print(f"Внимание: возможное начало атаки от {ip}")
+        # В противном случае, считаем трафик нормальным
 
 # Мониторинг лог-файла
 def monitor_log_file():
@@ -89,20 +92,21 @@ def stop_monitoring():
 
 # Главный цикл управления
 if __name__ == "__main__":
+    ip_details = {}  # Словарь для хранения деталей по IP-адресам
     while True:
-        command = input("Введите 'start' для запуска, 'stop' для остановки, 'show' для просмотра заблокированных IP, или 'exit' для выхода: ")
+        command = input("Введите команду ('start', 'stop', 'show', 'set', 'exit'): ")
         if command == "start":
-            if not running:
-                start_monitoring()
-            else:
-                print("Мониторинг уже запущен")
+            start_monitoring()
         elif command == "stop":
-            if running:
-                stop_monitoring()
-            else:
-                print("Мониторинг не запущен.")
+            stop_monitoring()
         elif command == "show":
             show_blocked_ips()
+        elif command == "set":
+            try:
+                new_limit = int(input("Введите новый лимит запросов: "))
+                set_limit(new_limit)
+            except ValueError:
+                print("Ошибка: Введите целое число.")
         elif command == "exit":
             if running:
                 stop_monitoring()
