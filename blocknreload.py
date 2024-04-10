@@ -21,10 +21,24 @@ def set_limit(new_limit):
 
 # Блокировка IP-адреса
 def block_ip(ip_address):
-    with open(NGINX_BLOCKED_IPS_FILE, "a") as file:
-        file.write(f"deny {ip_address};\n")
-    os.system("nginx -s reload")
-    print(f"Blocked IP in Nginx: {ip_address}")
+    already_blocked = False
+
+    # Проверка наличия IP-адреса в списке заблокированных
+    if os.path.exists(NGINX_BLOCKED_IPS_FILE):
+        with open(NGINX_BLOCKED_IPS_FILE, "r") as file:
+            for line in file:
+                if f"deny {ip_address};" in line:
+                    already_blocked = True
+                    break
+
+    # Блокировка IP-адреса, если он еще не заблокирован
+    if not already_blocked:
+        with open(NGINX_BLOCKED_IPS_FILE, "a") as file:
+            file.write(f"deny {ip_address};\n")
+        os.system("nginx -s reload")
+        print(f"Blocked IP in Nginx: {ip_address}")
+    else:
+        print(f"IP уже заблокирован: {ip_address}")
 
 # Просмотр заблокированных IP-адресов
 def show_blocked_ips():
