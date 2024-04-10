@@ -99,8 +99,10 @@ def start_monitoring():
     global running
     running = True
     monitoring_thread = threading.Thread(target=monitor_log_file)
+    monitoring_thread.daemon = True  # Сделать поток демоническим
     monitoring_thread.start()
     print("Мониторинг запущен.")
+
 
 def stop_monitoring():
     global running
