@@ -60,7 +60,11 @@ def process_log_line(line, ip_details):
     if ip_address:
         ip = ip_address[0]
         if ip not in ip_details:
-            ip_details[ip] = {"count": 0, "start_time": time.time(), "end_time": time.time()}
+            ip_details[ip] = {"count": 0, "start_time": time.time(), "end_time": time.time(), "alerted": False, "blocked": False}
+
+        # Проверка, не заблокирован ли уже IP
+        if ip_details[ip]["blocked"]:
+            return
 
         ip_details[ip]["count"] += 1
         ip_details[ip]["end_time"] = time.time()
@@ -72,9 +76,10 @@ def process_log_line(line, ip_details):
 
         if r > 1:
             block_ip(ip)
-            ip_details.pop(ip)  # Сбросить подсчет для этого IP
-        elif 0.85 <= r <= 1:
+            ip_details[ip]["blocked"] = True
+        elif 0.85 <= r <= 1 and not ip_details[ip]["alerted"]:
             print(f"Внимание: возможное начало атаки от {ip}")
+            ip_details[ip]["alerted"] = True
         # В противном случае, считаем трафик нормальным
 
 # Мониторинг лог-файла
