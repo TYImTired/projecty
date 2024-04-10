@@ -79,9 +79,7 @@ def process_log_line(line, ip_details):
 
 # Мониторинг лог-файла
 def monitor_log_file():
-    global running
-    ip_counter = {}
-    post_request_counter = {}
+    ip_details = {}
     process = subprocess.Popen(['tail', '-F', LOG_FILE_PATH], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     while running:
@@ -89,7 +87,7 @@ def monitor_log_file():
         if not line:
             time.sleep(0.1)
             continue
-        process_log_line(line, ip_counter, post_request_counter)
+        process_log_line(line, ip_details)
 
 # Функции запуска и остановки мониторинга
 def start_monitoring():
