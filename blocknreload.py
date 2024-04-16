@@ -4,6 +4,7 @@ import time
 import threading
 import sys
 import os
+import sqlite3
 
 # Настройки для обнаружения DDoS-атаки
 LIMIT = 100  # Изначальное значение лимита запросов
@@ -18,6 +19,32 @@ def set_limit(new_limit):
     global LIMIT
     LIMIT = new_limit
     print(f"Новый лимит установлен: {LIMIT} запросов")
+
+# Подключение к базе данных
+def connect_db():
+    return sqlite3.connect("blocked_ips.db")
+
+# Создание таблицы, если она еще не создана
+def create_table():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS blocked_ips (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip_address TEXT NOT NULL,
+            block_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    conn.commit()
+    conn.close()
+
+# Добавление заблокированного IP в базу данных
+def add_blocked_ip_to_db(ip_address):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO blocked_ips (ip_address) VALUES (?)", (ip_address,))
+    conn.commit()
+    conn.close()
 
 # Блокировка IP-адреса
 def block_ip(ip_address):
@@ -36,6 +63,7 @@ def block_ip(ip_address):
         with open(NGINX_BLOCKED_IPS_FILE, "a") as file:
             file.write(f"deny {ip_address};\n")
         os.system("nginx -s reload")
+        add_blocked_ip_to_db(ip_address) # Добавление в БД
         print(f"Blocked IP in Nginx: {ip_address}")
     else:
         print(f"IP уже заблокирован: {ip_address}")
