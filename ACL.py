@@ -31,7 +31,7 @@ def create_table():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ip_address TEXT NOT NULL,
                     block_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    block_duration INTEGER DEFAULT 1  # Duration of the block in minutes
+                    block_duration INTEGER DEFAULT 1  -- Duration of the block in minutes
                 );
             """)
             conn.commit()
@@ -39,6 +39,7 @@ def create_table():
             print(f"Error creating table: {e}")
         finally:
             conn.close()
+
 
 def set_limit(new_limit):
     global LIMIT
