@@ -5,7 +5,7 @@ import threading
 from ACL import create_table, monitor_log_file, update_nginx_configuration
 
 def start_monitoring():
-    global running
+    global running  # Add this line to ensure 'running' is recognized inside this function
     if not running:
         running = True
         monitoring_thread = threading.Thread(target=monitor_log_file, daemon=True)
@@ -14,6 +14,7 @@ def start_monitoring():
         print("Monitoring started.")
     else:
         messagebox.showinfo("Info", "Monitoring is already running.")
+
 
 def stop_monitoring():
     global running
