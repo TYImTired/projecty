@@ -68,19 +68,7 @@ def block_ip(ip_address):
     else:
         print(f"IP уже заблокирован: {ip_address}")
 
-# Просмотр заблокированных IP-адресов
-def show_blocked_ips():
-    if not os.path.exists(NGINX_BLOCKED_IPS_FILE):
-        print("Файл заблокированных IP не найден.")
-        return
-    with open(NGINX_BLOCKED_IPS_FILE, "r") as file:
-        blocked_ips = file.readlines()
-    if blocked_ips:
-        print("Заблокированные IP-адреса:")
-        for ip in blocked_ips:
-            print(ip.strip())
-    else:
-        print("Нет заблокированных IP-адресов.")
+
 # Обработка строки лога
 
 def get_blocked_ips():
@@ -154,13 +142,11 @@ def stop_monitoring():
 if __name__ == "__main__":
     ip_details = {}  # Словарь для хранения деталей по IP-адресам
     while True:
-        command = input("Введите команду ('start', 'stop', 'show', 'set', 'exit'): ")
+        command = input("Введите команду ('start', 'stop', 'set', 'exit'): ")
         if command == "start":
             start_monitoring()
         elif command == "stop":
             stop_monitoring()
-        elif command == "show":
-            show_blocked_ips()
         elif command == "set":
             try:
                 new_limit = int(input("Введите новый лимит запросов: "))
