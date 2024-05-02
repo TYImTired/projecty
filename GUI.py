@@ -3,7 +3,7 @@ from tkinter import messagebox
 import threading
 
 # Импорт необходимых функций
-from blocknreload import start_monitoring, stop_monitoring, show_blocked_ips, set_limit
+from blocknreload import start_monitoring, stop_monitoring, show_blocked_ips, set_limit, create_table
 
 def run_monitoring():
     monitoring_thread = threading.Thread(target=start_monitoring)
@@ -20,7 +20,7 @@ def start_monitoring_gui():
 
 def show_ips():
     ips = show_blocked_ips()
-    messagebox.showinfo("Blocked IPs", ips)
+    messagebox.showinfo("Blocked IPs:", ips)
 
 def set_limit_gui():
     limit = limit_entry.get()
@@ -31,6 +31,10 @@ def set_limit_gui():
     except ValueError:
         messagebox.showerror("Error", "Введите целое число.")
 
+def create_table_gui():
+    create_table()
+    messagebox.showinfo("Таблица создана")
+
 app = tk.Tk()
 app.title("DDoS Monitoring Tool")
 
@@ -39,6 +43,9 @@ start_button.pack(pady=5)
 
 stop_button = tk.Button(app, text="Stop Monitoring", command=stop_monitoring_gui)
 stop_button.pack(pady=5)
+
+create_button = tk.Button(app, text="Create table", command=create_table_gui)
+create_button.pack(pady=5)
 
 show_button = tk.Button(app, text="Show Blocked IPs", command=show_ips)
 show_button.pack(pady=5)
