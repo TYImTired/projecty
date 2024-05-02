@@ -83,6 +83,19 @@ def show_blocked_ips():
         print("Нет заблокированных IP-адресов.")
 # Обработка строки лога
 
+def get_blocked_ips():
+    """Retrieve blocked IPs and their block times from the database."""
+    conn = sqlite3.connect("blocked_ips.db")  # Подключение к базе данных
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT ip_address, block_time FROM blocked_ips ORDER BY block_time DESC")
+        return cursor.fetchall()  # Возвращает список кортежей (ip_address, block_time)
+    except sqlite3.Error as e:
+        print(f"Ошибка базы данных: {e}")
+        return []  # Возвращает пустой список в случае ошибки
+    finally:
+        conn.close()  # Обязательно закрываем соединение с базой данных
+
 def process_log_line(line, ip_details):
     ip_address = re.findall(r'[0-9]+(?:\.[0-9]+){3}', line)
     if ip_address:
