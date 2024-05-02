@@ -21,17 +21,47 @@ data_tab = ttk.Frame(tab_control)
 tab_control.add(data_tab, text='Database View')
 tab_control.pack(expand=1, fill='both')
 
+def run_monitoring():
+    monitoring_thread = threading.Thread(target=start_monitoring)
+    monitoring_thread.daemon = True
+    monitoring_thread.start()
+
+def stop_monitoring_gui():
+    stop_monitoring()
+    messagebox.showinfo("Monitoring", "Мониторинг остановлен.")
+
+def start_monitoring_gui():
+    run_monitoring()
+    messagebox.showinfo("Monitoring", "Мониторинг запущен.")
+
+def show_ips():
+    ips = show_blocked_ips()
+    messagebox.showinfo("Blocked IPs:", ips)
+
+def set_limit_gui():
+    limit = limit_entry.get()
+    try:
+        limit = int(limit)
+        set_limit(limit)
+        messagebox.showinfo("Set Limit", f"Лимит установлен: {limit}")
+    except ValueError:
+        messagebox.showerror("Error", "Введите целое число.")
+
+def create_table_gui():
+    create_table()
+    messagebox.showinfo("Таблица создана")
+
 # Элементы управления на вкладке Control
-start_button = tk.Button(control_tab, text="Start Monitoring", command=start_monitoring_gui)
+start_button = tk.Button(control_tab, text="Start Monitoring", command=lambda: start_monitoring_gui())
 start_button.pack(pady=5)
 
-stop_button = tk.Button(control_tab, text="Stop Monitoring", command=stop_monitoring_gui)
+stop_button = tk.Button(control_tab, text="Stop Monitoring", command=lambda: stop_monitoring_gui())
 stop_button.pack(pady=5)
 
-create_button = tk.Button(control_tab, text="Create table", command=create_table_gui)
+create_button = tk.Button(control_tab, text="Create table", command=lambda: create_table_gui())
 create_button.pack(pady=5)
 
-show_button = tk.Button(control_tab, text="Show Blocked IPs", command=show_ips)
+show_button = tk.Button(control_tab, text="Show Blocked IPs", command=lambda: show_ips())
 show_button.pack(pady=5)
 
 limit_label = tk.Label(control_tab, text="Set Request Limit:")
@@ -40,7 +70,7 @@ limit_label.pack()
 limit_entry = tk.Entry(control_tab)
 limit_entry.pack()
 
-set_limit_button = tk.Button(control_tab, text="Set Limit", command=set_limit_gui)
+set_limit_button = tk.Button(control_tab, text="Set Limit", command=lambda: set_limit_gui())
 set_limit_button.pack(pady=5)
 
 # Таблица для отображения данных на вкладке Database View
